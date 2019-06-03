@@ -10,6 +10,7 @@
 
 
 $SETTINGS_FILE = plugin_dir_path(__FILE__).'settings.php';
+
 require_once($SETTINGS_FILE);  # import administrative panel settings.
 
 if( is_admin() )
@@ -27,6 +28,34 @@ function generate_auth_token($api_key, $secret_key){
     $token = json_decode($response['body'], true);
     $token['auth_str'] = $token['token_type']. ' '.$token['access_token'];
     return $token;
+}
+
+function retrieve_animals($options, $shelter_id){
+    $CACHE_DIR = plugin_dir_path(__FILE__).'tmp/';
+    $CACHE_FILE = $CACHE_DIR.'cached_call.json';
+    $CACHE_TIME = 3600;
+
+    if (file_exists($CACHE_FILE)){
+        print_r(filemtime($CACHE_FILE));
+    }
+    else{
+        $token = generate_auth_token($options['api_key'], $options['secret_key']);
+        # Get shelter animals.
+        $response = wp_remote_get('https://api.petfinder.com/v2/animals?organization='.$shelter_id,
+            array(
+                'headers' => array(
+                    'Authorization'=> $token['auth_str'],
+                    'Content-Type' => 'application/json',
+                    'Accept' => 'application/json'
+                ),
+
+            ));
+        $fp = fopen($CACHE_FILE, 'w');
+        $json = json_encode($response['body'], JSON_PRETTY_PRINT);
+        fwrite($fp, $json);
+        fclose($fp);
+    }
+
 }
 
 function hrrn_petfinder(){
@@ -56,23 +85,7 @@ function hrrn_petfinder(){
     }
 
     /* Petfinder API Calls */
-    $shelter_id = 'TX194';
-
-    $token = generate_auth_token($options['api_key'], $options['secret_key']);
-
-
-    # Get shelter animals.
-    $response = wp_remote_get('https://api.petfinder.com/v2/animals?organization=TX194',
-        array(
-            'headers' => array(
-                'Authorization'=> $token['auth_str'],
-                'Content-Type' => 'application/json',
-                'Accept' => 'application/json'
-            ),
-
-        ));
-
-    print_r($response);
+    retrieve_animals($options,'TX194');
 }
 
 add_shortcode('hrrn_petfinder', 'hrrn_petfinder');
