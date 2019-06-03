@@ -1,1 +1,3 @@
-console.log("hi there")
+jQuery( document ).ready(function() {
+  console.log('ok');
+});

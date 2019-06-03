@@ -1,3 +1,25 @@
-.test{
-    background-color:blue;
+.petfinder-container{
+  border-radius:5px;
+  border:2px solid #ffa500;
+  margin: auto;
+  padding-top:10px;
+  padding-bottom:10px;
+  height: auto !important;
+  min-height:350px;
+}
+
+.petfinder-container p {
+  line-height: 1px;
+}
+
+.petfinder-rabbit-name {
+  font-size:1.5em;
+  line-height:1em;
+  text-align:center;
+  padding-bottom:10px;
+  color:#ffa500;
+}
+
+.petfinder-rabbit-name:hover{
+  text-decoration: underline;
 }

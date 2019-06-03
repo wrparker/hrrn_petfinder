@@ -33,12 +33,17 @@ function generate_auth_token($api_key, $secret_key){
 function retrieve_animals($options, $shelter_id){
     $CACHE_DIR = plugin_dir_path(__FILE__).'tmp/';
     $CACHE_FILE = $CACHE_DIR.'cached_call.json';
-    $CACHE_TIME = 3600;
+    $CACHE_TIME = 3600;  # 1 hour.
+    $PAGE_LIMIT = 100;
 
-    if (file_exists($CACHE_FILE)){
-        print_r(filemtime($CACHE_FILE));
+    clearstatcache();  # mkae sure we dont cache time
+    if (file_exists($CACHE_FILE) && abs(time() - filemtime($CACHE_FILE)) < $CACHE_TIME ){
+      return true;
     }
     else{
+      if (file_exists($CACHE_FILE)){
+          unlink($CACHE_FILE);
+        }
         $token = generate_auth_token($options['api_key'], $options['secret_key']);
         # Get shelter animals.
         $response = wp_remote_get('https://api.petfinder.com/v2/animals?organization='.$shelter_id,
@@ -48,14 +53,65 @@ function retrieve_animals($options, $shelter_id){
                     'Content-Type' => 'application/json',
                     'Accept' => 'application/json'
                 ),
-
+                'body' => array(
+                    'limit' => $PAGE_LIMIT,
+                )
             ));
+        $animals = json_decode($response['body'], true)['animals'];
+        $cur_page = json_decode($response['body'], true)['pagination']['current_page'];
+        $total_pages = json_decode($response['body'], true)['pagination']['total_pages'];
+
+        while($cur_page < $total_pages){
+          $cur_page = $cur_page + 1;
+          $response = wp_remote_get('https://api.petfinder.com/v2/animals?organization='.$shelter_id,
+              array(
+                  'headers' => array(
+                      'Authorization'=> $token['auth_str'],
+                      'Content-Type' => 'application/json',
+                      'Accept' => 'application/json'
+                  ),
+                  'body' => array(
+                      'limit' => $PAGE_LIMIT,
+                      'page' => (int)$cur_page,
+                  )
+              ));
+            $animals = array_merge($animals, json_decode($response['body'], true)['animals']);
+        }
+
         $fp = fopen($CACHE_FILE, 'w');
-        $json = json_encode($response['body'], JSON_PRETTY_PRINT);
+        $json = json_encode($animals);
         fwrite($fp, $json);
         fclose($fp);
     }
+}
 
+function display_animals(){
+  #TODO: duplication, refactor this into something nicer.
+  $CACHE_DIR = plugin_dir_path(__FILE__).'tmp/';
+  $CACHE_FILE = $CACHE_DIR.'cached_call.json';
+
+  $json = file_get_contents($CACHE_FILE);
+  $json_data = json_decode($json, true);
+  $counter = 0;
+  $html = "<div class='container'>";
+  $html .="<div class='row'>";
+  $counter = 0;
+  foreach ($json_data as $animal){
+      $html .= "<div class='col-md-3 petfinder-container'>";
+        $html .= "<img class='rabbit_profile_picture' src='".$animal['photos'][0]['medium']."' />'";
+        $html .=  "<p class='petfinder-rabbit-name'>".$animal['name']."</p>";
+        $html .= "<p class='petfinder-breed'>".$animal['breeds']['primary']."</p>";
+        $html .= "<p class='petfinder-sex'>".$animal['gender']."</p>";
+        $html .= "<p class='petfinder-age-size'>".$animal['size'].", ".$animal['age']."</p>";
+        $counter = $counter + 1;
+        $html .= '</div>';
+        if ($counter %4 == 0){
+          $html .= "</div><div class='row'>";
+        }
+  }
+$html .= '</div>';
+
+return $html;
 }
 
 function hrrn_petfinder(){
@@ -86,8 +142,8 @@ function hrrn_petfinder(){
 
     /* Petfinder API Calls */
     retrieve_animals($options,'TX194');
+    $html = display_animals();
+    return $html;
 }
 
 add_shortcode('hrrn_petfinder', 'hrrn_petfinder');
-
-
