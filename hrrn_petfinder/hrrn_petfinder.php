@@ -16,6 +16,31 @@ require_once($SETTINGS_FILE);  # import administrative panel settings.
 if( is_admin() )
     $hrrn_settings_page = new HrrnPetfinderSettingsPage();
 
+function array_msort($array, $cols)
+{
+    $colarr = array();
+    foreach ($cols as $col => $order) {
+        $colarr[$col] = array();
+        foreach ($array as $k => $row) { $colarr[$col]['_'.$k] = strtolower($row[$col]); }
+    }
+    $eval = 'array_multisort(';
+    foreach ($cols as $col => $order) {
+        $eval .= '$colarr[\''.$col.'\'],'.$order.',';
+    }
+    $eval = substr($eval,0,-1).');';
+    eval($eval);
+    $ret = array();
+    foreach ($colarr as $col => $arr) {
+        foreach ($arr as $k => $v) {
+            $k = substr($k,1);
+            if (!isset($ret[$k])) $ret[$k] = $array[$k];
+            $ret[$k][$col] = $array[$k][$col];
+        }
+    }
+    return $ret;
+
+}
+
 /* Shortcode stuff */
 function generate_auth_token($api_key, $secret_key){
     $response = wp_remote_post('https://api.petfinder.com/v2/oauth2/token',
@@ -85,31 +110,130 @@ function retrieve_animals($options, $shelter_id){
     }
 }
 
+function table_header($json_data){
+  $html = '';
+  $html = "
+  <div class='container petfinder-legend-container'>
+      <h2>Adoptable Rabbits</h2>
+      <div class='row'>
+      <div class='col-sm-12'>
+        <p>You can search here for rabbits that are currently adoptable.  Click on the rabbit's name, photo or '[Read more]' for more information.</p>
+      </div>
+    </div>
+    <div class='row'>
+        <div class='form-group col-md-12'>
+          <label for='name-filter'>Name:</label>
+          <input type='text' name='name-filter' id='name-filter' />
+        </div>
+
+        <div class='form-group col-md-3'>
+          <label for='gender-filter'>Gender:</label>
+          <select name='gender-filter' class='form-control' id='gender-filter'>
+            <option value='Any'>Any</option>
+            <option value='Male'>Male</option>
+            <option value='Female'>Female</option>
+          </select>
+        </div>
+
+        <div class='form-group col-md-3'>
+          <label for='species-filter'>Species:</label>
+          <select name='species-filter' class='form-control' id='species-filter'>
+            <option value='Any'>Any</option>
+            <option value='Male'>Male</option>
+            <option value='Female'>Female</option>
+          </select>
+        </div>
+
+        <div class='form-group col-md-3'>
+          <label for='species-filter'>Age:</label>
+          <select name='age-filter' class='form-control' id='age-filter'>
+            <option value='Any'>Any</option>
+            <option value='Male'>Male</option>
+            <option value='Female'>Female</option>
+          </select>
+        </div>
+
+
+        <div class='form-group col-md-3'>
+          <label for='species-filter'>Size:</label>
+          <select name='age-filter' class='form-control' id='age-filter'>
+            <option value='Any'>Any</option>
+            <option value='Male'>Male</option>
+            <option value='Female'>Female</option>
+          </select>
+        </div>
+
+
+      <div class='col-sm-6'>
+        <p class='legend'><strong>Legend</strong> <br />
+        <i class='fas fa-neuter'></i> = Spayed/Neutered <br />
+        <i class='fas fa-prescription'></i> = Requires Special Needs <br />
+        <i class='fas fa-syringe'></i> = Current on Vaccinations (Pasturella) <br />
+        <i class='fas fa-venus female'></i> = Female <i class='fas fa-mars male'></i> = Male
+        </p>
+      </div>
+      <div class='col-sm-6'>
+        <button>Apply Filters</button>
+        <button>Reset Filters</button>
+      </div>
+
+      </div>
+  </div>";
+
+  return $html;
+}
+
 function display_animals(){
   #TODO: duplication, refactor this into something nicer.
   $CACHE_DIR = plugin_dir_path(__FILE__).'tmp/';
   $CACHE_FILE = $CACHE_DIR.'cached_call.json';
 
+
   $json = file_get_contents($CACHE_FILE);
   $json_data = json_decode($json, true);
+  $json_data = array_msort($json_data, array('name'=>SORT_ASC));
   $counter = 0;
-  $html = "<div class='container'>";
-  $html .="<div class='row'>";
+  $html = table_header($json_data);
+  $html .= "<div class='container'>";
+  $html .="<div class='row flex-row'>";
   $counter = 0;
   foreach ($json_data as $animal){
-      $html .= "<div class='col-md-3 petfinder-container'>";
-        $html .= "<img class='rabbit_profile_picture' src='".$animal['photos'][0]['medium']."' />'";
-        $html .=  "<p class='petfinder-rabbit-name'>".$animal['name']."</p>";
-        $html .= "<p class='petfinder-breed'>".$animal['breeds']['primary']."</p>";
-        $html .= "<p class='petfinder-sex'>".$animal['gender']."</p>";
-        $html .= "<p class='petfinder-age-size'>".$animal['size'].", ".$animal['age']."</p>";
+      $html .= "<div class='col-md-4 petfinder-container'>";
+      if (!empty($animal['photos'])){
+          $html .= "<a href='".$animal['url']."' target='_blank'><img class='rabbit_profile_picture' src='".$animal['photos'][0]['medium']."' /></a>'";
+        }
+      else{
+        # TODO: Get actaul photo for camer shy.
+        $html .= "---CAMERA SHY HERE---";
+      }
+        $html .=  "<a href='".$animal['url']."' target='_blank'><p class='petfinder-rabbit-title'><span class='petfinder-rabbit-name'>".$animal['name']."</span>";
+        if ($animal['gender'] == 'Female'){
+          $html .= " (<i class='fas fa-venus female'></i>) ";
+        }
+        else{
+          $html .= " (<i class='fas fa-mars male'></i>)";
+        }
+        $html .= "</p></a>";
+        $html .= "<p class='petfinder-info-symbols'>";
+        if ($animal['attributes']['spayed_neutered'] == '1'){
+            $html .= " <i class='fas fa-neuter'></i>";
+        }
+        if ($animal['attributes']['special_needs'] == '1'){
+            $html .= " <i class='fas fa-prescription'></i>";
+        }
+        if ($animal['attributes']['shots_current'] == '1'){
+            $html .= " <i class='fas fa-syringe'></i>";
+        }
+        $html .= "</p>";
+
+
+        $html .= "<p class='petfinder-breed-size-age'>".$animal['breeds']['primary']." (".$animal['size'].", ".$animal['age'].")</p>";
+        $html .= "<p class='petfinder-description'>".htmlspecialchars_decode($animal['description'])." <a href='".$animal['url']."' target='_blank'> [Read more]</a></p>";
         $counter = $counter + 1;
         $html .= '</div>';
-        if ($counter %4 == 0){
-          $html .= "</div><div class='row'>";
-        }
+
   }
-$html .= '</div>';
+$html .= '</div></div>';
 
 return $html;
 }
