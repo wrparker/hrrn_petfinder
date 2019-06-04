@@ -103,8 +103,8 @@ function retrieve_animals($options, $shelter_id){
             $animals = array_merge($animals, json_decode($response['body'], true)['animals']);
         }
 
-        $fp = fopen($CACHE_FILE, 'w');
         $json = json_encode($animals);
+        $fp = fopen($CACHE_FILE, 'w');
         fwrite($fp, $json);
         fclose($fp);
     }
@@ -243,11 +243,9 @@ function hrrn_petfinder(){
     $options = get_option('hrrn_petfinder', option_defaults());
 
     if ($options['bootstrap_import']){
-        echo "<!--Including Plugin Bootstrap on page -->";
         wp_enqueue_style('bootstrap',plugin_dir_url(__FILE__).'css/bootstrap.min.css' );
         wp_enqueue_script('bootstrap-js', plugin_dir_url(__FILE__).'js/jquery.min.js');
         wp_enqueue_script('bootstrap-popper', plugin_dir_url(__FILE__).'js/popper.min.js');
-        echo "<!--End plugin bootstrap-->";
     }
 
     wp_enqueue_style('hrrn_petfinder', plugin_dir_url(__FILE__).'css/hrrn_petfinder.css' );
