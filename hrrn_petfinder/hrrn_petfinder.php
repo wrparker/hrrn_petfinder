@@ -200,7 +200,7 @@ function display_animals(){
   foreach ($json_data as $animal){
       $html .= "<div class='col-md-4 petfinder-container'>";
       if (!empty($animal['photos'])){
-          $html .= "<a href='".$animal['url']."' target='_blank'><img class='rabbit_profile_picture' src='".$animal['photos'][0]['medium']."' /></a>'";
+          $html .= "<a href='".$animal['url']."' target='_blank'><img class='rabbit_profile_picture' src='".$animal['photos'][0]['medium']."' /></a>";
         }
       else{
         # TODO: Get actaul photo for camer shy.
