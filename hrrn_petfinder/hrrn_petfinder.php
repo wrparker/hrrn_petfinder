@@ -195,7 +195,7 @@ function display_animals(){
   $counter = 0;
   $html = table_header($json_data);
   $html .= "<div class='container'>";
-  $html .="<div class='row flex-row'>";
+  $html .="<div class='row'>";
   $counter = 0;
   foreach ($json_data as $animal){
       $html .= "<div class='col-md-4 petfinder-container'>";
