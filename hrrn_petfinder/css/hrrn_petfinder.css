@@ -4,11 +4,6 @@
   border-bottom:2px solid #ffa500;
 }
 
-.flex-row{
-    display: flex;
-    flex-wrap: wrap;
-}
-
 .legend{
 
 }
