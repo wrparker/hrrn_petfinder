@@ -3,8 +3,6 @@ version: '3.3'
 services:
    db:
      image: mysql:5.7
-     volumes:
-       - db_data:/var/lib/mysql
      restart: always
      environment:
        MYSQL_ROOT_PASSWORD: somewordpress
@@ -22,7 +20,7 @@ services:
        - "8000:80"
      user: root
      volumes:
-       - ./:/var/www/html
+       - ./hrrn_petfinder:/var/www/html/wp-content/plugins/hrrn_petfinder
      restart: always
      environment:
        XDEBUG_CONFIG: remote_host=host.docker.internal
