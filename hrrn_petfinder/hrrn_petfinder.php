@@ -110,8 +110,55 @@ function retrieve_animals($options, $shelter_id){
     }
 }
 
+function get_breed_types_list($json_data){
+    $breed_types = array();
+    foreach ($json_data as $data){
+        foreach ($data['breeds'] as $breed_type){
+            if(!in_array($breed_type, $breed_types) && $breed_type != null) {
+                array_push($breed_types, $breed_type);
+            }
+        }
+    }
+    sort($breed_types);
+    return $breed_types;
+}
+
+function get_age_list($json_data){
+    $age_types = array();
+    foreach ($json_data as $data){
+        if (!in_array($data['age'], $age_types)){
+            array_push($age_types, $data['age']);
+        }
+    }
+    sort($age_types);
+    return $age_types;
+}
+
+function get_size_list($json_data){
+    $size_types = array();
+    foreach ($json_data as $data){
+        if (!in_array($data['size'], $size_types)){
+            array_push($size_types, $data['size']);
+        }
+    }
+    sort($size_types);
+    return $size_types;
+}
+
+function types_to_options($list){
+    $html = "<option value=''>Any</option>";
+    foreach($list as $item){
+        $html .= "<option value='".$item."'>".$item."</option>";
+    }
+    return $html;
+}
+
+
 function table_header($json_data){
   $html = '';
+  $breed_types = get_breed_types_list($json_data);
+  $age_types = get_age_list($json_data);
+  $size_types = get_size_list($json_data);
   $html = "
   <div class='container petfinder-legend-container'>
       <h2>Adoptable Rabbits</h2>
@@ -129,37 +176,29 @@ function table_header($json_data){
         <div class='form-group col-md-3'>
           <label for='gender-filter'>Gender:</label>
           <select name='gender-filter' class='form-control' id='gender-filter'>
-            <option value='Any'>Any</option>
-            <option value='Male'>Male</option>
-            <option value='Female'>Female</option>
+           ".types_to_options(array('Male', 'Female'))."
           </select>
         </div>
 
         <div class='form-group col-md-3'>
-          <label for='species-filter'>Species:</label>
-          <select name='species-filter' class='form-control' id='species-filter'>
-            <option value='Any'>Any</option>
-            <option value='Male'>Male</option>
-            <option value='Female'>Female</option>
+          <label for='breed-filter'>Species:</label>
+          <select name='breed-filter' class='form-control' id='breed-filter'>
+            ".types_to_options($breed_types)."
           </select>
         </div>
 
         <div class='form-group col-md-3'>
-          <label for='species-filter'>Age:</label>
+          <label for='age-filter'>Age:</label>
           <select name='age-filter' class='form-control' id='age-filter'>
-            <option value='Any'>Any</option>
-            <option value='Male'>Male</option>
-            <option value='Female'>Female</option>
+          ".types_to_options($age_types)."
           </select>
         </div>
 
 
         <div class='form-group col-md-3'>
-          <label for='species-filter'>Size:</label>
-          <select name='age-filter' class='form-control' id='age-filter'>
-            <option value='Any'>Any</option>
-            <option value='Male'>Male</option>
-            <option value='Female'>Female</option>
+          <label for='size-filter'>Size:</label>
+          <select name='size-filter' class='form-control' id='size-filter'>
+          ".types_to_options($size_types)."
           </select>
         </div>
 
@@ -173,8 +212,7 @@ function table_header($json_data){
         </p>
       </div>
       <div class='col-sm-6'>
-        <button>Apply Filters</button>
-        <button>Reset Filters</button>
+        <button id='reset-filters'>Reset Filters</button>
       </div>
 
       </div>
@@ -203,7 +241,7 @@ function display_animals(){
           $html .= "<a href='".$animal['url']."' target='_blank'><img class='rabbit_profile_picture' src='".$animal['photos'][0]['medium']."' /></a>";
         }
       else{
-        # TODO: Get actaul photo for camer shy.
+        # TODO: Get actaul photo for camera shy.
         $html .= "---CAMERA SHY HERE---";
       }
         $html .=  "<a href='".$animal['url']."' target='_blank'><p class='petfinder-rabbit-title'><span class='petfinder-rabbit-name'>".$animal['name']."</span>";
