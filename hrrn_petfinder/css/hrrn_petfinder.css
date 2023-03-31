@@ -4,6 +4,10 @@
   border-bottom:2px solid #ffa500;
 }
 
+.vaccination-legend{
+  text-decoration: underline;
+}
+
 .legend{
 
 }

@@ -93,7 +93,16 @@ function applyFilters(){
         }
 
     });
-
-
-
 }
+
+jQuery( document ).ready(function() {
+
+    jQuery(this).tooltip();
+    jQuery(".vaccination-legend").tooltip({content:"<h1>Vaccination List:</h1><ul><li>RHDV</li><li>Pasteurella</li></ul>"});
+
+
+    jQuery(".vaccination-legend").click(function(event) {
+        event.preventDefault();
+        console.log("Link clicked but default behavior prevented."); 
+    });
+});

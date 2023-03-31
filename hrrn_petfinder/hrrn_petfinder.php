@@ -207,7 +207,7 @@ function table_header($json_data){
         <p class='legend'><strong>Legend</strong> <br />
         <i class='fas fa-neuter'></i> = Spayed/Neutered <br />
         <i class='fas fa-prescription'></i> = Requires Special Needs <br />
-        <i class='fas fa-syringe'></i> = Current on Vaccinations (Pasturella) <br />
+        <i class='fas fa-syringe'></i> = Current on <a href='' class='vaccination-legend' title=''>Vaccinations</a> <br />
         <i class='fas fa-venus female'></i> = Female <i class='fas fa-mars male'></i> = Male
         </p>
       </div>
@@ -288,6 +288,10 @@ function hrrn_petfinder(){
 
     wp_enqueue_style('hrrn_petfinder', plugin_dir_url(__FILE__).'css/hrrn_petfinder.css' );
     wp_enqueue_script('hrrn_petfinder', plugin_dir_url(__FILE__).'js/hrrn_petfinder.js');
+    
+    wp_enqueue_style('jquery-ui-style', plugin_dir_url(__FILE__).'css/jquery-ui.css' );
+    wp_enqueue_script('jquery-ui-js', plugin_dir_url(__FILE__).'js/jquery-ui.min.js');
+
 
 
     if (!$options['api_key'] || !$options['secret_key']){
